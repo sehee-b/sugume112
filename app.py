@@ -3,27 +3,28 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 
-st.set_page_config(page_title="코리올리 힘 시뮬레이션", layout="centered")
+st.set_page_config(page_title="Coriolis Force Simulation", layout="centered")
 
-st.title("🌪️ 코리올리 힘 시뮬레이션")
-st.write("지구 자전에 의해 발생하는 코리올리 힘의 영향을 시각화합니다.")
+st.title("🌪️ Coriolis Force Simulation")
+st.write("Visualizing the effect of the Coriolis force caused by Earth's rotation.")
 
-# 사용자 입력
-v0 = st.slider("초기 속도 (북쪽, m/s)", 10, 100, 50, step=5)
-hemisphere = st.radio("반구 선택", ("북반구", "남반구"))
+# User inputs
+v0 = st.slider("Initial Velocity Northward (m/s)", 10, 200, 50, step=5)  # 속도 최대값 늘림
+hemisphere = st.radio("Hemisphere", ("Northern Hemisphere", "Southern Hemisphere"))
 
-# 시뮬레이션 파라미터
-omega = 7.29e-5  # 지구 자전 각속도
-dt = 100
-duration = 150000
+# Simulation parameters
+omega = 7.29e-5  # Earth's angular velocity (rad/s)
+dt = 10          # 시간 간격 줄여서 더 정밀하게 (원래 100 -> 10)
+duration = 30000 # 전체 시뮬레이션 시간 줄임 (150000 -> 30000)
 steps = int(duration / dt)
+
 r = np.array([0.0, 0.0])
 v = np.array([0.0, v0])
 trajectory = []
 forces = []
 
 for _ in range(steps):
-    sign = -1 if hemisphere == "북반구" else 1
+    sign = -1 if hemisphere == "Northern Hemisphere" else 1
     coriolis = sign * 2 * omega * np.array([-v[1], v[0]])
     v += coriolis * dt
     r += v * dt
@@ -33,16 +34,25 @@ for _ in range(steps):
 trajectory = np.array(trajectory)
 forces = np.array(forces)
 
-# 시각화
-fig, ax = plt.subplots(figsize=(6, 5))
-ax.plot(trajectory[:, 0], trajectory[:, 1], label="공기 궤적", color="green")
-for i in range(0, len(trajectory), 500):
+# Visualization
+fig, ax = plt.subplots(figsize=(7, 6))
+ax.plot(trajectory[:, 0], trajectory[:, 1], label="Air Trajectory", color="green")
+
+# 화살표 간격 조정 (간격 줄여서 더 많이 표시)
+arrow_step = max(1, steps // 50)
+for i in range(0, len(trajectory), arrow_step):
     ax.quiver(
         trajectory[i, 0], trajectory[i, 1],
         forces[i, 0], forces[i, 1],
         color="red", scale_units="xy", scale=1e-3, width=0.003
     )
-ax.set_title(f"코리올리 힘에 따른 공기 궤적 ({hemisphere})")
+
+ax.set_title(f"Coriolis Force Effect on Air Trajectory ({hemisphere})")
+ax.set_xlabel("East-West Distance (m)")
+ax.set_ylabel("North-South Distance (m)")
+ax.legend()
+ax.grid(True)
+st.pyplot(fig)
 ax.set_xlabel("동서 방향 거리 (m)")
 ax.set_ylabel("남북 방향 거리 (m)")
 ax.legend()
